@@ -102,8 +102,8 @@ jobs:
         
     - name: Build Docker image
       run: |
-        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/tencent-llm-api:latest .
-        docker tag ${{ secrets.DOCKERHUB_USERNAME }}/tencent-llm-api:latest ${{ secrets.DOCKERHUB_USERNAME }}/tencent-llm-api:${{ github.sha }}
+        docker build -t hhx/tencent-llm-api:latest .
+        docker tag hhx/tencent-llm-api:latest hhx/tencent-llm-api:${{ github.sha }}
         
     - name: Run Docker container for testing
       run: |
