@@ -4,7 +4,25 @@ server:
 spring:
   application:
     name: tencent-llm-api
+  http:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
 
 logging:
   level:
     com.example.tencentllm: DEBUG
+    reactor: DEBUG
+    org.springframework: INFO
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  charset:
+    console: UTF-8
+    file: UTF-8
+
+# JVM参数设置
+java:
+  options:
+    - "-Dfile.encoding=UTF-8"
+    - "-Dconsole.encoding=UTF-8"
