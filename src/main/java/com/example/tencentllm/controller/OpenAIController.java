@@ -6,8 +6,11 @@ import com.example.tencentllm.model.dto.ModelResponse;
 import com.example.tencentllm.model.dto.ErrorResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import jakarta.validation.Valid;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 
@@ -22,96 +25,72 @@ public class OpenAIController {
     );
 
     @PostMapping("/chat/completions")
-    public ResponseEntity<?> chatCompletions(@Valid @RequestBody ChatRequest request) {
-        try {
-            // Validate model
-            if (!SUPPORTED_MODELS.contains(request.getModel())) {
-                ErrorResponse errorResponse = ErrorResponse.createError(
-                    "The model `" + request.getModel() + "` does not exist or you do not have access to it.",
-                    "invalid_request_error",
-                    "model_not_found"
-                );
-                return ResponseEntity.badRequest().body(errorResponse);
-            }
-
-            // Check if streaming is requested
-            if ("true".equals(request.getStream())) {
-                // For simplicity, return an error for streaming requests
-                ErrorResponse errorResponse = ErrorResponse.createError(
-                    "Streaming is not supported in this mock implementation.",
-                    "invalid_request_error",
-                    "streaming_not_supported"
-                );
-                return ResponseEntity.badRequest().body(errorResponse);
-            }
-
-            ChatResponse response = ChatResponse.createDefault(request.getModel(), request.getMessages());
-            return ResponseEntity.ok(response);
-
-        } catch (Exception e) {
+    public Object chatCompletions(@Valid @RequestBody ChatRequest request) {
+        // Validate model
+        if (!SUPPORTED_MODELS.contains(request.getModel())) {
             ErrorResponse errorResponse = ErrorResponse.createError(
-                "An internal error occurred.",
-                "internal_server_error",
-                "internal_error"
-            );
-            return ResponseEntity.internalServerError().body(errorResponse);
-        }
-    }
-
-    @GetMapping("/models")
-    public ResponseEntity<ModelResponse> listModels() {
-        ModelResponse response = ModelResponse.createDefault();
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/models/{modelId}")
-    public ResponseEntity<?> getModel(@PathVariable String modelId) {
-        ModelResponse modelResponse = ModelResponse.createDefault();
-        
-        ModelResponse.Model model = modelResponse.getData().stream()
-            .filter(m -> m.getId().equals(modelId))
-            .findFirst()
-            .orElse(null);
-
-        if (model == null) {
-            ErrorResponse errorResponse = ErrorResponse.createError(
-                "Model not found",
+                "The model `" + request.getModel() + "` does not exist or you do not have access to it.",
                 "invalid_request_error",
                 "model_not_found"
             );
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.badRequest().body(errorResponse);
         }
 
-        return ResponseEntity.ok(model);
+        // Check if streaming is requested
+        if ("true".equals(request.getStream())) {
+            return Flux.range(0, 5)
+                    .delayElements(Duration.ofMillis(200))
+                    .map(i -> "data: {\"id\":\"chatcmpl-" + System.currentTimeMillis() + "\",\"object\":\"chat.completion.chunk\",\"created\":" + (System.currentTimeMillis() / 1000) + ",\"model\":\"" + request.getModel() + "\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"chunk " + (i + 1) + "\"}}]}\n\n")
+                    .concatWithValues("data: [DONE]\n\n");
+        }
+
+        ChatResponse response = ChatResponse.createDefault(request.getModel(), request.getMessages());
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/models")
+    public Mono<ModelResponse> listModels() {
+        return Mono.just(ModelResponse.createDefault());
+    }
+
+    @GetMapping("/models/{modelId}")
+    public Mono<ResponseEntity<?>> getModel(@PathVariable String modelId) {
+        ModelResponse modelResponse = ModelResponse.createDefault();
+        
+        return Mono.just(modelResponse.getData().stream()
+            .filter(m -> m.getId().equals(modelId))
+            .findFirst()
+            .map(model -> ResponseEntity.ok((Object) model))
+            .orElse(ResponseEntity.notFound().build()));
     }
 
     @PostMapping("/completions")
-    public ResponseEntity<?> completions(@RequestBody String request) {
+    public Mono<ResponseEntity<ErrorResponse>> completions(@RequestBody String request) {
         ErrorResponse errorResponse = ErrorResponse.createError(
-            "Legacy completions endpoint is not supported in this mock implementation. Please use chat/completions instead.",
+            "Legacy completions endpoint is not supported. Please use chat/completions instead.",
             "invalid_request_error",
             "endpoint_not_supported"
         );
-        return ResponseEntity.badRequest().body(errorResponse);
+        return Mono.just(ResponseEntity.badRequest().body(errorResponse));
     }
 
     @PostMapping("/embeddings")
-    public ResponseEntity<?> embeddings(@RequestBody String request) {
+    public Mono<ResponseEntity<ErrorResponse>> embeddings(@RequestBody String request) {
         ErrorResponse errorResponse = ErrorResponse.createError(
-            "Embeddings endpoint is not supported in this mock implementation.",
+            "Embeddings endpoint is not supported.",
             "invalid_request_error",
             "endpoint_not_supported"
         );
-        return ResponseEntity.badRequest().body(errorResponse);
+        return Mono.just(ResponseEntity.badRequest().body(errorResponse));
     }
 
     @GetMapping("/engines")
-    public ResponseEntity<ModelResponse> listEngines() {
-        return listModels(); // Alias for models endpoint
+    public Mono<ModelResponse> listEngines() {
+        return listModels();
     }
 
     @GetMapping("/engines/{engineId}")
-    public ResponseEntity<?> getEngine(@PathVariable String engineId) {
-        return getModel(engineId); // Alias for models endpoint
+    public Mono<ResponseEntity<?>> getEngine(@PathVariable String engineId) {
+        return getModel(engineId);
     }
 }
