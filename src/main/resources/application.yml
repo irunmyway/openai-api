@@ -1,0 +1,12 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /v1
+
+spring:
+  application:
+    name: tencent-llm-api
+
+logging:
+  level:
+    com.example.tencentllm: DEBUG
