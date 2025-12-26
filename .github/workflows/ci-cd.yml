@@ -112,13 +112,13 @@ jobs:
 
     - name: Build Docker image
       run: |
-        docker build -t hhx/tencent-llm-api:latest .
-        docker tag hhx/tencent-llm-api:latest hhx/tencent-llm-api:${{ github.sha }}
+        docker build -t bettermankind/tencent-llm-api:latest .
+        docker tag bettermankind/tencent-llm-api:latest bettermankind/tencent-llm-api:${{ github.sha }}
 
     - name: Push to Docker Hub
       run: |
-        docker push hhx/tencent-llm-api:latest
-        docker push hhx/tencent-llm-api:${{ github.sha }}
+        docker push bettermankind/tencent-llm-api:latest
+        docker push bettermankind/tencent-llm-api:${{ github.sha }}
 
   deploy:
     name: Deploy to Production (Example)
