@@ -3,6 +3,8 @@ package com.example.tencentllm.model.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 
 import java.util.List;
 
@@ -30,22 +32,13 @@ public class ChatRequest {
     private Double presencePenalty = 0.0;
     
     private List<String> stop;
-    
+
+    @Data
+    @AllArgsConstructor
     public static class Message {
         private String role;
         private String content;
-        
-        public Message() {}
-        
-        public Message(String role, String content) {
-            this.role = role;
-            this.content = content;
-        }
-        
-        public String getRole() { return role; }
-        public void setRole(String role) { this.role = role; }
-        public String getContent() { return content; }
-        public void setContent(String content) { this.content = content; }
+
     }
 
     // Getters and Setters
