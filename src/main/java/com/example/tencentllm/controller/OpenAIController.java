@@ -4,6 +4,7 @@ import com.example.tencentllm.model.dto.ChatRequest;
 import com.example.tencentllm.model.dto.ChatResponse;
 import com.example.tencentllm.model.dto.ModelResponse;
 import com.example.tencentllm.model.dto.ErrorResponse;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
@@ -15,7 +16,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @RestController
-@RequestMapping
+@RequestMapping("/v1")
 @CrossOrigin(origins = "*")
 public class OpenAIController {
 
@@ -24,7 +25,7 @@ public class OpenAIController {
         "text-davinci-003", "text-curie-001"
     );
 
-    @PostMapping("/chat/completions")
+    @PostMapping(value = "/chat/completions", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_EVENT_STREAM_VALUE})
     public Object chatCompletions(@Valid @RequestBody ChatRequest request) {
         // Validate model
         if (!SUPPORTED_MODELS.contains(request.getModel())) {
@@ -38,10 +39,11 @@ public class OpenAIController {
 
         // Check if streaming is requested
         if ("true".equals(request.getStream())) {
-            return Flux.range(0, 5)
-                    .delayElements(Duration.ofMillis(200))
-                    .map(i -> "data: {\"id\":\"chatcmpl-" + System.currentTimeMillis() + "\",\"object\":\"chat.completion.chunk\",\"created\":" + (System.currentTimeMillis() / 1000) + ",\"model\":\"" + request.getModel() + "\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"chunk " + (i + 1) + "\"}}]}\n\n")
-                    .concatWithValues("data: [DONE]\n\n");
+            String userContent = getUserContent(request.getMessages());
+            return Flux.range(0, userContent.length())
+                    .delayElements(Duration.ofMillis(100))
+                    .map(i -> String.valueOf(userContent.charAt(i)))
+                    .concatWithValues("[END]");
         }
 
         ChatResponse response = ChatResponse.createDefault(request.getModel(), request.getMessages());
@@ -92,5 +94,32 @@ public class OpenAIController {
     @GetMapping("/engines/{engineId}")
     public Mono<ResponseEntity<?>> getEngine(@PathVariable String engineId) {
         return getModel(engineId);
+    }
+
+    private String getUserContent(List<ChatRequest.Message> messages) {
+        if (messages == null || messages.isEmpty()) {
+            return "Hello! I'm a mock AI assistant.";
+        }
+        
+        // 获取最后一条用户消息
+        for (int i = messages.size() - 1; i >= 0; i--) {
+            ChatRequest.Message message = messages.get(i);
+            if ("user".equals(message.getRole())) {
+                return message.getContent() != null ? message.getContent() : "";
+            }
+        }
+        
+        return "Hello! I'm a mock AI assistant.";
+    }
+
+    private String escapeJsonChar(char c) {
+        switch (c) {
+            case '"': return "\\\"";
+            case '\\': return "\\\\";
+            case '\n': return "\\n";
+            case '\r': return "\\r";
+            case '\t': return "\\t";
+            default: return String.valueOf(c);
+        }
     }
 }

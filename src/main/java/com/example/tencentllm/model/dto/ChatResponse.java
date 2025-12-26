@@ -38,23 +38,18 @@ public class ChatResponse {
     
     private static String generateDefaultResponse(List<ChatRequest.Message> messages) {
         if (messages == null || messages.isEmpty()) {
-            return "Hello! I'm a mock AI assistant. How can I help you today?";
+            return "Hello! I'm a mock AI assistant.";
         }
         
-        ChatRequest.Message lastMessage = messages.get(messages.size() - 1);
-        String content = lastMessage.getContent();
-        
-        if (content.toLowerCase().contains("hello") || content.toLowerCase().contains("hi")) {
-            return "Hello! I'm doing great, thank you for asking. How can I assist you today?";
-        } else if (content.toLowerCase().contains("how are you")) {
-            return "I'm doing well! I'm a mock AI assistant ready to help you with various tasks.";
-        } else if (content.toLowerCase().contains("weather")) {
-            return "I'm a mock AI and don't have access to real-time weather data. However, I recommend checking your local weather service for accurate information.";
-        } else if (content.toLowerCase().contains("code") || content.toLowerCase().contains("program")) {
-            return "I'd be happy to help you with coding! Since I'm a mock AI, I can provide general programming advice and examples. What specific programming task are you working on?";
-        } else {
-            return "I understand you said: \"" + content + "\". As a mock AI assistant, I'm here to help! This is a simulated response for testing purposes.";
+        // 获取最后一条用户消息并直接返回
+        for (int i = messages.size() - 1; i >= 0; i--) {
+            ChatRequest.Message message = messages.get(i);
+            if ("user".equals(message.getRole())) {
+                return message.getContent() != null ? message.getContent() : "Hello! I'm a mock AI assistant.";
+            }
         }
+        
+        return "Hello! I'm a mock AI assistant.";
     }
     
     private static int calculateTokens(List<ChatRequest.Message> messages) {
