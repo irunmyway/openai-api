@@ -90,7 +90,7 @@ jobs:
       run: |
         cat > Dockerfile << 'EOF'
         # 使用官方的OpenJDK 21作为基础镜像
-        FROM openjdk:21-jdk-slim
+        FROM eclipse-temurin:21-jdk-alpine
         
         # 设置工作目录
         WORKDIR /app
