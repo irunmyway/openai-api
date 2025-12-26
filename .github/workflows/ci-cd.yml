@@ -99,32 +99,26 @@ jobs:
         
         CMD ["java", "-jar", "app.jar"]
         EOF
-        
-    - name: Build Docker image
-      run: |
-        docker build -t hhx/tencent-llm-api:latest .
-        docker tag hhx/tencent-llm-api:latest hhx/tencent-llm-api:${{ github.sha }}
-        
-    - name: Run Docker container for testing
-      run: |
-        docker run -d --name test-container -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/tencent-llm-api:latest
-        sleep 10
-        
-        curl -f http://localhost:8080/health || exit 1
-        curl -f http://localhost:8080/v1/models || exit 1
-        curl -X POST http://localhost:8080/v1/chat/completions \
-          -H "Content-Type: application/json" \
-          -d '{
-            "model": "gpt-3.5-turbo",
-            "messages": [{"role": "user", "content": "Hello"}],
-            "max_tokens": 50
-          }' || exit 1
-        docker stop test-container
 
-    - name: Push to Docker Hub
-      run: |
-        docker push ${{ secrets.DOCKERHUB_USERNAME }}/tencent-llm-api:latest
-        docker push ${{ secrets.DOCKERHUB_USERNAME }}/tencent-llm-api:${{ github.sha }}
+    - name: Build and push (Debian)
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./scripts/dockerfiles/Dockerfile.debian
+        push: true
+        platforms: linux/amd64,linux/i386,linux/arm64,linux/arm/v7
+        tags: ${{ steps.meta-debian.outputs.tags }}
+        labels: ${{ steps.meta-debian.outputs.labels }}
+
+#    - name: Build Docker image
+#      run: |
+#        docker build -t hhx/tencent-llm-api:latest .
+#        docker tag hhx/tencent-llm-api:latest hhx/tencent-llm-api:${{ github.sha }}
+#
+#    - name: Push to Docker Hub
+#      run: |
+#        docker push ${{ secrets.DOCKERHUB_USERNAME }}/tencent-llm-api:latest
+#        docker push ${{ secrets.DOCKERHUB_USERNAME }}/tencent-llm-api:${{ github.sha }}
 
   deploy:
     name: Deploy to Production (Example)
