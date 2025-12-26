@@ -51,15 +51,25 @@
 
 ### Docker运行
 
-1. **构建Docker镜像**
-   ```bash
-   docker build -t tencent-llm-api .
-   ```
+Docker镜像会在GitHub Actions中自动构建，你可以使用以下方式运行：
 
-2. **运行容器**
-   ```bash
-   docker run -p 8080:8080 tencent-llm-api
-   ```
+```bash
+# 拉取镜像（如果已推送到Docker Hub）
+docker pull tencent-llm-api:latest
+
+# 或者在GitHub Actions构建后手动构建
+docker build -t tencent-llm-api:latest -<<'EOF'
+FROM openjdk:21-jdk-slim
+WORKDIR /app
+COPY target/*.jar app.jar
+EXPOSE 8080
+ENV JAVA_OPTS="-Xmx512m -Xms256m"
+CMD ["java", "-jar", "app.jar"]
+EOF
+
+# 运行容器
+docker run -p 8080:8080 tencent-llm-api:latest
+```
 
 ### 使用Docker Compose
 
@@ -67,7 +77,7 @@
 version: '3.8'
 services:
   tencent-llm-api:
-    build: .
+    image: tencent-llm-api:latest
     ports:
       - "8080:8080"
     environment:
