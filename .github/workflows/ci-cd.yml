@@ -131,7 +131,7 @@ jobs:
     - name: Deploy notification
       run: |
         echo "🚀 Deployment successful!"
-        echo "0.9.3"
+        echo "0.9.6"
         echo "Service is running with the latest changes from master branch"
         echo "Docker image: ${{ secrets.DOCKERHUB_USERNAME }}/tencent-llm-api:${{ github.sha }}"
         echo ""
