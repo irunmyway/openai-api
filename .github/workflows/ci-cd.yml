@@ -117,8 +117,8 @@ jobs:
 
     - name: Push to Docker Hub
       run: |
-        docker push ${{ secrets.DOCKERHUB_USERNAME }}/tencent-llm-api:latest
-        docker push ${{ secrets.DOCKERHUB_USERNAME }}/tencent-llm-api:${{ github.sha }}
+        docker push hhx/tencent-llm-api:latest
+        docker push hhx/tencent-llm-api:${{ github.sha }}
 
   deploy:
     name: Deploy to Production (Example)
